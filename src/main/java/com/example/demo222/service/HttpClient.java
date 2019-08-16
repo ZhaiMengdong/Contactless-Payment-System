@@ -1,11 +1,13 @@
 package com.example.demo222.service;
 
+
 import org.dom4j.DocumentException;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+
 
 /**
  * Created by 夏路遥
@@ -15,12 +17,14 @@ import org.springframework.web.client.RestTemplate;
 public class HttpClient {
 
     public String client(String url, HttpMethod method, MultiValueMap<String, String> params) throws DocumentException {
-        RestTemplate template= new RestTemplate();
-        ResponseEntity<String> response1 =template.getForEntity(url, String.class);
+        RestTemplate template = new RestTemplate();
+        ResponseEntity<String> response1 = template.postForEntity(url, params, String.class);
 
         String xmlStr = response1.getBody();
 //        Document document = DocumentHelper.parseText(xmlStr);
 
         return xmlStr;
     }
+
+
 }

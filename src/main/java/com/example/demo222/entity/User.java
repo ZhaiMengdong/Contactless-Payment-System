@@ -19,11 +19,13 @@ public class User {
     /**
      * accountId
      */
-    @TableId(value = "accountId",type = IdType.INPUT)
+//    @TableId(value = "accountId",type = IdType.INPUT)
+    @TableId(value = "accountId")
     private String accountId;
     /**
      * skey
      */
+    @TableField("skey")
     private String skey;
     /**
      * 创建时间
