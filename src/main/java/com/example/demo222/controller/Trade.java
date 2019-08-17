@@ -22,6 +22,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
+/** 
+* @Description: 对接边缘计算网关，无感支付车辆认证以及无感支付订单提交接口 
+* @Author: ZMD
+* @UpdateTime: 2019/8/17 11:07
+*/ 
 @Controller
 @RequestMapping("/api/v1/trade")
 public class Trade {
@@ -33,6 +39,11 @@ public class Trade {
     @Autowired
     private BillMapper billMapper;
 
+    /** 
+    * @Description: 充电前判断车辆是否已开通无感支付 
+    * @Author: ZMD
+    * @UpdateTime: 2019/8/17 11:16
+    */ 
     @RequestMapping("/charging_verification")
     public GlobalResult chargingVerification(
             @RequestParam("vin") String vin,
@@ -58,6 +69,11 @@ public class Trade {
         return GlobalResult.build(200,null, result);
     }
 
+    /** 
+    * @Description: 无感充电支付订单提交 
+    * @Author: ZMD
+    * @UpdateTime: 2019/8/17 11:34
+    */ 
     @RequestMapping("/charging_pay")
     public GlobalResult chargingPay(
             @RequestParam("amount") String amount,

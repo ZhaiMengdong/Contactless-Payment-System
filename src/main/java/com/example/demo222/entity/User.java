@@ -1,6 +1,5 @@
 package com.example.demo222.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -8,10 +7,12 @@ import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
-/**
- * Created by 夏路遥
- * 8/1/2019 2:31 PM
- */
+
+/** 
+* @Description: 表user，记录用户信息 
+* @Author: ZMD
+* @UpdateTime: 2019/8/17 11:33
+*/ 
 @Data
 @TableName("user")
 public class User {

@@ -29,20 +29,22 @@ public class UserController {
     @Autowired
     private UserMapper userMapper;
 
-
-    /*
-    小程序登录，给小程序返回openId，小程序可以通过openId来标记自身信息
-     */
+    /**
+    * @Description: 小程序登录，给小程序返回openId，小程序可以通过openId来标记自身信息
+    * @Author: ZMD
+    * @UpdateTime: 2019/8/17 10:27
+    */
     @PostMapping("wx/login")
     @ResponseBody
     public GlobalResult user_login(
-            @RequestParam("code") String code
+            @RequestParam("code") String code//小程序提供的code
     ){
-        System.out.println("accept code:"+code);
+        //调用微信接口获取微信账号的openid和sessionkey，目前sessionkey未使用，后期判断用户登录状态时需要
         JSONObject SessionKeyOpenId = WechatUtil.getSessionKeyOrOpenId(code);
         String openid = SessionKeyOpenId.getString("openid");
         String sessionKey = SessionKeyOpenId.getString("session_key");
         User user = this.userMapper.selectById(openid);
+        //如果数据库中没有该微信账号的记录，则生成一个无感支付平台的账号，号码为openid
         if (user == null){
             user = new User();
             user.setAccountId(openid);
@@ -62,12 +64,14 @@ public class UserController {
     }
 
     /**
-     * 微信用户注册
-     */
+    * @Description: 微信用户授权后获取微信账号的一些基本信息，根据accoudid更新表user
+    * @Author: ZMD
+    * @UpdateTime: 2019/8/17 11:04
+    */
     @PostMapping("wx/regesiter")
     @ResponseBody
     public GlobalResult user_regesiger(@RequestParam(value = "AccountId", required = false) String accountId,
-                                   @RequestParam(value = "rawData", required = false) String rawData,
+                                   @RequestParam(value = "rawData", required = false) String rawData,//微信账号非敏感信息
                                    @RequestParam(value = "signature", required = false) String signature,
                                    @RequestParam(value = "encrypteData", required = false) String encrypteData,
                                    @RequestParam(value = "iv", required = false) String iv) {
@@ -109,8 +113,6 @@ public class UserController {
         user.setNickName(nickName);
 
         this.userMapper.insert(user);
-        // 5.根据返回的User实体类，判断用户是否是新用户，是的话，将用户信息存到数据库；不是的话，更新最新登录时间
-
 
         // uuid生成唯一key，用于维护微信小程序用户与服务端的会话
 //        String skey = UUID.randomUUID().toString();

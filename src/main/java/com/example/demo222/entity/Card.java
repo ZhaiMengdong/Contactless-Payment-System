@@ -9,107 +9,42 @@ import lombok.Data;
 
 
 /**
- * @Author: zmd
- * @Date: 2019/8/6 20:14
- **/
-//@Entity
-//@Table(name = "card")
-//public class Card {
-//
-//    @Id
-//    private String txSnBinding;
-//    private String accountId;
-//    private String cardNumber;
-//    private String cardType;
-//    private String bankID;
-//
-//    private int status;
-//
-//    public void setAccountId(String accountId) {
-//        this.accountId = accountId;
-//    }
-//
-//    public void setCardNumber(String cardNumber) {
-//        this.cardNumber = cardNumber;
-//    }
-//
-//    public void setCardType(String cardType) {
-//        this.cardType = cardType;
-//    }
-//
-//    public void setBankID(String bankID) {
-//        this.bankID = bankID;
-//    }
-//
-//    public void setStatus(int status) {
-//        this.status = status;
-//    }
-//
-//    public void setTxSnBinding(String txSnBinding) {
-//        this.txSnBinding = txSnBinding;
-//    }
-//
-//    @Column(name = "txSnBinding")
-//    public String getTxSnBinding() {
-//        return txSnBinding;
-//    }
-//
-//    @Basic
-//    @Column(name = "accountId")
-//    public String getAccountId() {
-//        return accountId;
-//    }
-//
-//    @Basic
-//    @Column(name = "cardNumber")
-//    public String getCardNumber() {
-//        return cardNumber;
-//    }
-//
-//    @Basic
-//    @Column(name = "cardType")
-//    public String getCardType() {
-//        return cardType;
-//    }
-//
-//    @Basic
-//    @Column(name = "bankID")
-//    public String getBankID() {
-//        return bankID;
-//    }
-//
-//    @Basic
-//    @Column(name = "status")
-//    public int getStatus() {
-//        return status;
-//    }
-//}
+* @Description: 表card，记录银行卡信息
+* @Author: ZMD
+* @UpdateTime: 2019/8/17 11:31
+*/
 @Data
 @TableName(value = "card")
 public class Card{
 
-//    @TableId(value = "txSnBinding",type = IdType.INPUT)
+    //绑定流水号
     @TableId(value = "txSnBinding")
     private String txSnBinding;
 
     @TableField("accountId")
     private String accountId;
 
+    //卡号
     @TableField("cardNumber")
     private String cardNumber;
 
+    //卡类型
     @TableField("cardType")
     private String cardType;
 
+    //银行id
     @TableField("bankID")
     private String bankID;
 
+    //支付优先级
     @TableField("priority")
     private int priority;
 
+    //银行卡尾号
     @TableField("tailNumber")
     private String tailNumber;
 
+    //银行卡状态
     @TableField("status")
     private int status;
 
