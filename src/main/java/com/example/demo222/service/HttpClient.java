@@ -13,6 +13,11 @@ import org.springframework.web.client.RestTemplate;
  * Created by 夏路遥
  * 7/31/2019 4:47 PM
  */
+/** 
+* @Description: 发送http post请求，返回得到的页面
+* @Author: ZMD
+* @UpdateTime: 2019/8/17 12:35
+*/ 
 @Service
 public class HttpClient {
 
@@ -20,10 +25,10 @@ public class HttpClient {
         RestTemplate template = new RestTemplate();
         ResponseEntity<String> response1 = template.postForEntity(url, params, String.class);
 
-        String xmlStr = response1.getBody();
+        String htmlStr = response1.getBody();
 //        Document document = DocumentHelper.parseText(xmlStr);
 
-        return xmlStr;
+        return htmlStr;
     }
 
 

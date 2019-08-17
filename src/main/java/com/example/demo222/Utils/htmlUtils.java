@@ -12,22 +12,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @Author: zmd
- * @Date: 2019/8/15 17:15
- **/
+/** 
+* @Description: 解析html 
+* @Author: ZMD
+* @UpdateTime: 2019/8/17 12:37
+*/ 
 public class htmlUtils {
 
+    /** 
+    * @Description: 从html中解析出xml 
+    * @Author: ZMD
+    * @UpdateTime: 2019/8/17 12:49
+    */ 
     public static String getRequestXML(String html){
-//        System.out.println("html"+html);
         Document document = Jsoup.parse(html);
         org.jsoup.select.Elements form = document.select("body");
         Element e = form.select("tbody").select("tr").next().select("td").next().select("textarea").first();
         String request = e.text();
-//        System.out.println("xml:"+request);
         return request;
     }
 
+    /** 
+    * @Description: 从html中解析出xml 
+    * @Author: ZMD
+    * @UpdateTime: 2019/8/17 13:02
+    */ 
     public static Map<String, String> getMessageAndSignature(String html){
         Document document = Jsoup.parse(html);
         Elements elements = document.select("body").select("form").select("input");
@@ -37,6 +46,11 @@ public class htmlUtils {
         return messageSignature;
     }
 
+    /** 
+    * @Description: 从html中解析出请求返回结果 
+    * @Author: ZMD
+    * @UpdateTime: 2019/8/17 13:03
+    */ 
     public static String getResponse(String html){
         System.out.println("response:\n"+html);
         Document document = Jsoup.parse(html);
