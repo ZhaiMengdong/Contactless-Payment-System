@@ -11,7 +11,7 @@ import java.util.Date;
 /** 
 * @Description: 表user，记录用户信息 
 * @Author: ZMD
-* @UpdateTime: 2019/8/17 11:33
+* @UpdateTime: 2019/8/17 13:43
 */ 
 @Data
 @TableName("user")
