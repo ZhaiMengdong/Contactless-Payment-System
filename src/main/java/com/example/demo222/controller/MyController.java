@@ -256,12 +256,6 @@ public class MyController {
             wrapper.eq("AccountId", accountId);
             this.bindingInfo.delete(wrapper);
 
-            //更新银行卡状态
-            QueryWrapper<Card> wrapper1 = new QueryWrapper<>();
-            Card card = new Card();
-            card.setStatus(1);
-            this.cardMapper.update(card, wrapper1);
-
             Map<String, String> result = new HashMap<>();
             result.put("Confirm", "OK");
             return GlobalResult.build(200, null, result);
@@ -476,7 +470,7 @@ public class MyController {
         wrapper.orderByAsc("priority");
         wrapper.eq("accountId", accountId);
         List<Card> cards = this.cardMapper.selectList(wrapper);
-        if (cards == null){
+        if (cards.size() == 0){
             return 0;
         }
         return cards.get(cards.size()-1).getPriority();
