@@ -4,8 +4,10 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.demo222.Utils.*;
+import com.example.demo222.entity.Bill;
 import com.example.demo222.entity.Car;
 import com.example.demo222.entity.Card;
+import com.example.demo222.repository.BillMapper;
 import com.example.demo222.repository.CarMapper;
 import com.example.demo222.repository.CardMapper;
 import org.eclipse.paho.client.mqttv3.*;
@@ -18,6 +20,7 @@ import org.springframework.util.MultiValueMap;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +28,7 @@ public class CallBack implements MqttCallback {
 
     private CarMapper carMapper ;
     private CardMapper cardMapper;
+    private BillMapper billMapper;
     private HttpClient httpClient;
 
     public static String broker = "tcp://127.0.0.1:1883";
@@ -32,10 +36,11 @@ public class CallBack implements MqttCallback {
     public static String clientId = "cloud_client_return";
     public static final byte[] key = new byte[]{-30, -81, -101, 119, -50, -80, -63, 111, -49, 33, -5, 94, -75, 88, -73, -45};
 
-    public CallBack(CarMapper carMapper, CardMapper cardMapper, HttpClient httpClient){
+    public CallBack(CarMapper carMapper, CardMapper cardMapper, HttpClient httpClient, BillMapper billMapper){
         this.carMapper = carMapper;
         this.cardMapper = cardMapper;
         this.httpClient = httpClient;
+        this.billMapper = billMapper;
     }
 
     @Override
@@ -140,6 +145,17 @@ public class CallBack implements MqttCallback {
             System.out.println("response: "+response);
             if(response.equals("OK.")){
                 jsonObj3.put("result", "ok");
+                String cardNumber = cards.get(0).getCardNumber();
+                Bill bill = new Bill();
+                bill.setAccountId(accountId);
+                bill.setAmount(cost);
+                bill.setCardNumber(cardNumber);
+                bill.setInstitutionId("200027");
+                bill.setPaymentNumber(PaymentNo);
+                bill.setStatus("1");
+                bill.setTime(new Date());
+                bill.setDeviceNumber(gatewayId+'-'+clientAddr);
+                this.billMapper.insert(bill);
             }else {
                 jsonObj3.put("result", "failed");
             }

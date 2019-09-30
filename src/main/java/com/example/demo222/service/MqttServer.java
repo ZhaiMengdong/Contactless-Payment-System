@@ -1,6 +1,7 @@
 package com.example.demo222.service;
 
 import com.example.demo222.Utils.ApplicationContextProvider;
+import com.example.demo222.repository.BillMapper;
 import com.example.demo222.repository.CarMapper;
 import com.example.demo222.repository.CardMapper;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -19,6 +20,7 @@ public class MqttServer extends Thread{
     private CarMapper carMapper;
     private CardMapper cardMapper;
     private HttpClient httpClient;
+    private BillMapper billMapper;
 
     public static MemoryPersistence persistence = new MemoryPersistence();
 
@@ -26,6 +28,7 @@ public class MqttServer extends Thread{
         this.carMapper = (CarMapper) ApplicationContextProvider.getBean(CarMapper.class);
         this.cardMapper = (CardMapper) ApplicationContextProvider.getBean(CardMapper.class);
         this.httpClient = (HttpClient) ApplicationContextProvider.getBean(HttpClient.class);
+        this.billMapper = (BillMapper) ApplicationContextProvider.getBean(BillMapper.class);
     }
 
     public void run(){
@@ -39,7 +42,7 @@ public class MqttServer extends Thread{
         options.setCleanSession(true);
         options.setConnectionTimeout(10);
         options.setKeepAliveInterval(20);
-        client.setCallback(new CallBack(carMapper, cardMapper, httpClient));
+        client.setCallback(new CallBack(carMapper, cardMapper, httpClient, billMapper));
         try {
             client.connect(options);
             if (client.isConnected()) {
