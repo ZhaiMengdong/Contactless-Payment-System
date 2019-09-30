@@ -18,11 +18,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.Date;
 
-/**
- * Created by 夏路遥
- * 8/1/2019 2:54 PM
- */
-
 @Controller
 public class UserController {
 
