@@ -3,50 +3,40 @@ package com.example.demo222.service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.example.demo222.Utils.GUIDGenerator;
-import com.example.demo222.Utils.OCPP;
-import com.example.demo222.Utils.SM4Util;
-import com.example.demo222.Utils.htmlUtils;
-import com.example.demo222.entity.Binding;
+import com.example.demo222.Utils.*;
 import com.example.demo222.entity.Car;
 import com.example.demo222.entity.Card;
-import com.example.demo222.entity.User;
 import com.example.demo222.repository.CarMapper;
 import com.example.demo222.repository.CardMapper;
-import org.apache.commons.lang.StringUtils;
-import org.bouncycastle.pqc.math.linearalgebra.ByteUtils;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.apache.commons.lang3.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.RestController;
 
-import javax.crypto.Cipher;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static javax.xml.transform.OutputKeys.ENCODING;
-
-
 public class CallBack implements MqttCallback {
 
+    private CarMapper carMapper ;
+    private CardMapper cardMapper;
+    private HttpClient httpClient;
 
     public static String broker = "tcp://127.0.0.1:1883";
     public static MemoryPersistence persistence = new MemoryPersistence();
     public static String clientId = "cloud_client_return";
     public static final byte[] key = new byte[]{-30, -81, -101, 119, -50, -80, -63, 111, -49, 33, -5, 94, -75, 88, -73, -45};
-    public HttpClient httpClient = new HttpClient();
+
+    public CallBack(CarMapper carMapper, CardMapper cardMapper, HttpClient httpClient){
+        this.carMapper = carMapper;
+        this.cardMapper = cardMapper;
+        this.httpClient = httpClient;
+    }
 
     @Override
     public void connectionLost(Throwable cause) {
@@ -68,7 +58,7 @@ public class CallBack implements MqttCallback {
 
         byte [] data = new byte[1024];
         byte [] payloadBytesDecrypt = null;
-        System.out.println("key: "+Arrays.toString(key));
+        System.out.println("key: "+ Arrays.toString(key));
         byte [] payloadBytesEncrypt = message.getPayload();
         System.out.println("payloadBytes: "+Arrays.toString(payloadBytesEncrypt));
         payloadBytesDecrypt = SM4Util.decrypt_Ecb_NoPadding(key, payloadBytesEncrypt);
@@ -87,35 +77,31 @@ public class CallBack implements MqttCallback {
         JSONObject jsonObj3 = new JSONObject();
         jsonObj3.put("client_addr", clientAddr);
 
-        Connection conn = null;
-        Statement stmt = null;
-        Class.forName("com.mysql.jdbc.Driver");
-        conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/test","root","123456");
-        stmt = conn.createStatement();
-
         if(topic.equals("authentication")){
             String vin = OCPP.parseOCPPVin(ocppPacket);
-
-            String sql = "select * from car where vin=\'"+vin+"\'";
-            ResultSet cars = stmt.executeQuery(sql);
-            if (cars.next()){
-                jsonObj3.put("result", "ok");
-            }else {
+            QueryWrapper<Car> wrapper = new QueryWrapper<>();
+            wrapper.eq("Vin", vin);
+            List<Car> cars = new ArrayList<Car>();
+            cars = this.carMapper.selectList(wrapper);
+            if(cars.size() == 0){
                 jsonObj3.put("result", "error");
+            }else {
+                jsonObj3.put("result", "ok");
             }
         }else if (topic.equals("payment")){
             String cost = OCPP.parseOCPPCost(ocppPacket);
             String vin = OCPP.parseOCPPVin(ocppPacket);
 
-            String sql = "select accountId from car where vin=\'"+vin+"\'";
-            ResultSet car = stmt.executeQuery(sql);
-            car.next();
-            String accountId = car.getString("accountId");
-
-            sql = "select * from card where accountId=\'"+accountId+"\' order by priority DESC";
-            ResultSet cards = stmt.executeQuery(sql);
-            cards.next();
-            String TxSNBinding = cards.getString("TxSNBinding");
+            QueryWrapper<Car> wrapper1 = new QueryWrapper<>();
+            wrapper1.eq("Vin", vin);
+            Car carResult = this.carMapper.selectOne(wrapper1);
+            String accountId = carResult.getAccountId();
+            QueryWrapper<Card> wrapper2 = new QueryWrapper<>();
+            wrapper2.eq("accountId", accountId);
+            wrapper2.orderByAsc("priority");
+            List<Card> cards = new ArrayList<>();
+            cards = cardMapper.selectList(wrapper2);
+            String TxSNBinding = cards.get(0).getTxSnBinding();
 
             String url="http://localhost:8080/zhongjin-demo-1.0-SNAPSHOT/Tx2511";
             HttpMethod method = HttpMethod.POST;
@@ -137,7 +123,6 @@ public class CallBack implements MqttCallback {
 
             //向http://localhost:8080/zhongjin-demo-1.0-SNAPSHOT/Tx2511提交表单，得到返回页面
             String html = httpClient.client(url, method, params);
-            System.out.println(html);
             //获取返回页面中的xml
             String requestXML = htmlUtils.getRequestXML(html);
             //从返回页面中获取message和signature
@@ -153,7 +138,12 @@ public class CallBack implements MqttCallback {
             String html2 = httpClient.client(url2, method, params2);
             String response = htmlUtils.getResponse(html2);
             System.out.println("response: "+response);
-            jsonObj3.put("result", "ok");
+            if(response.equals("OK.")){
+                jsonObj3.put("result", "ok");
+            }else {
+                jsonObj3.put("result", "failed");
+            }
+
         }
 
         System.out.println(jsonObj3.toString());
@@ -170,13 +160,11 @@ public class CallBack implements MqttCallback {
         }else if (topic.equals("payment")){
             resultTopic = gatewayId + "_payment";
         }
-        System.out.println("resultTopic: "+resultTopic);
         try {
             MqttClient mqttClient = new MqttClient(broker, clientId, persistence);
             MqttConnectOptions options = new MqttConnectOptions();
             options.setCleanSession(true);
             mqttClient.connect(options);
-//            MqttMessage result = new MqttMessage(message.getBytes());
             MqttMessage result = new MqttMessage(message);
             result.setQos(2);
             mqttClient.publish(resultTopic, result);

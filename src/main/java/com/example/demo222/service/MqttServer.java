@@ -1,5 +1,8 @@
 package com.example.demo222.service;
 
+import com.example.demo222.Utils.ApplicationContextProvider;
+import com.example.demo222.repository.CarMapper;
+import com.example.demo222.repository.CardMapper;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -13,7 +16,17 @@ public class MqttServer extends Thread{
     private static String clientId = "cloud_client";
     public static int qos = 2;
 
+    private CarMapper carMapper;
+    private CardMapper cardMapper;
+    private HttpClient httpClient;
+
     public static MemoryPersistence persistence = new MemoryPersistence();
+
+    public MqttServer(){
+        this.carMapper = (CarMapper) ApplicationContextProvider.getBean(CarMapper.class);
+        this.cardMapper = (CardMapper) ApplicationContextProvider.getBean(CardMapper.class);
+        this.httpClient = (HttpClient) ApplicationContextProvider.getBean(HttpClient.class);
+    }
 
     public void run(){
         MqttClient client = null;
@@ -26,7 +39,7 @@ public class MqttServer extends Thread{
         options.setCleanSession(true);
         options.setConnectionTimeout(10);
         options.setKeepAliveInterval(20);
-        client.setCallback(new CallBack());
+        client.setCallback(new CallBack(carMapper, cardMapper, httpClient));
         try {
             client.connect(options);
             if (client.isConnected()) {
