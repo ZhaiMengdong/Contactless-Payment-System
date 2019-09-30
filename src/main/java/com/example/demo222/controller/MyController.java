@@ -261,6 +261,14 @@ public class MyController {
             wrapper.eq("AccountId", accountId);
             this.bindingInfo.delete(wrapper);
 
+            //更新银行卡状态
+            QueryWrapper<Card> wrapper1 = new QueryWrapper<>();
+            wrapper1.eq("AccountId", accountId);
+            wrapper1.eq("txSnBinding", txSNBinding);
+            Card card = new Card();
+            card.setStatus(1);
+            this.cardMapper.update(card, wrapper1);
+
             Map<String, String> result = new HashMap<>();
             result.put("Confirm", "OK");
             return GlobalResult.build(200, null, result);
