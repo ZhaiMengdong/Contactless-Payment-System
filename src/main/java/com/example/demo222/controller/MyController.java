@@ -163,9 +163,14 @@ public class MyController {
             }
 
             //如果数据库中没有本次绑定的银行卡，则添加一条银行卡记录，并更新用户信息；如果已绑定过该卡，则不作操作
-            Map<String,Object> cardMap = new HashMap<>();
-            cardMap.put("cardNumber", cardNumber);
-            List<Card> cards = this.cardMapper.selectByMap(cardMap);
+//            Map<String,Object> cardMap = new HashMap<>();
+//            cardMap.put("cardNumber", cardNumber);
+//            cardMap.put("AccountId", accountId);
+//            List<Card> cards = this.cardMapper.selectByMap(cardMap);
+            QueryWrapper<Card> wrapper1 = new QueryWrapper<Card>();
+            wrapper1.eq("cardNumber", cardNumber);
+            wrapper1.eq("AccountId", accountId);
+            List<Card> cards = cardMapper.selectList(wrapper1);
             if (cards.size() == 0){
                 Card card = new Card();
                 card.setAccountId(accountId);
