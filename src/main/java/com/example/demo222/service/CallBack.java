@@ -107,41 +107,43 @@ public class CallBack implements MqttCallback {
             List<Card> cards = new ArrayList<>();
             cards = cardMapper.selectList(wrapper2);
             String TxSNBinding = cards.get(0).getTxSnBinding();
-
-            String url="http://localhost:8080/zhongjin-demo-1.0-SNAPSHOT/Tx2511";
-            HttpMethod method = HttpMethod.POST;
-            String institutionID = "200027";//机构号
             String PaymentNo = GUIDGenerator.genGUID();
-            MultiValueMap<String,String> params = new LinkedMultiValueMap<>();
-            params.add("InstitutionID",institutionID);
-            params.add("PaymentNo", PaymentNo);
-            params.add("TxCode","2511");
-            params.add("Amount", cost);
-            params.add("TxSNBinding", TxSNBinding);
-            params.add("SplitType", "10");
-            params.add("SettlementFlag","0001");
-            //ValidDate和CVN2为可选字段，如果不选，也应将其加入请求参数中，值为""
-            params.add("ValidDate", "");
-            params.add("CVN2", "");
-            params.add("SharedInstitutionID", "");
-            params.add("Remark","");
 
-            //向http://localhost:8080/zhongjin-demo-1.0-SNAPSHOT/Tx2511提交表单，得到返回页面
-            String html = httpClient.client(url, method, params);
-            //获取返回页面中的xml
-            String requestXML = htmlUtils.getRequestXML(html);
-            //从返回页面中获取message和signature
-            Map<String, String> messageSignature = htmlUtils.getMessageAndSignature(html);
-            MultiValueMap<String,String> params2 = new LinkedMultiValueMap<>();
-            params2.add("RequestPlainText", requestXML);
-            params2.add("message", messageSignature.get("message"));
-            params2.add("signature", messageSignature.get("signature"));
-            params2.add("txCode", "2511");
-            params2.add("txName", "快捷支付");
-            params2.add("Flag", "");
-            String url2 = "http://localhost:8080/zhongjin-demo-1.0-SNAPSHOT/SendMessage";
-            String html2 = httpClient.client(url2, method, params2);
-            String response = htmlUtils.getResponse(html2);
+//            String url="http://localhost:8080/zhongjin-demo-1.0-SNAPSHOT/Tx2511";
+//            HttpMethod method = HttpMethod.POST;
+//            String institutionID = "200027";//机构号
+//            MultiValueMap<String,String> params = new LinkedMultiValueMap<>();
+//            params.add("InstitutionID",institutionID);
+//            params.add("PaymentNo", PaymentNo);
+//            params.add("TxCode","2511");
+//            params.add("Amount", cost);
+//            params.add("TxSNBinding", TxSNBinding);
+//            params.add("SplitType", "10");
+//            params.add("SettlementFlag","0001");
+//            //ValidDate和CVN2为可选字段，如果不选，也应将其加入请求参数中，值为""
+//            params.add("ValidDate", "");
+//            params.add("CVN2", "");
+//            params.add("SharedInstitutionID", "");
+//            params.add("Remark","");
+//
+//            //向http://localhost:8080/zhongjin-demo-1.0-SNAPSHOT/Tx2511提交表单，得到返回页面
+//            String html = httpClient.client(url, method, params);
+//            //获取返回页面中的xml
+//            String requestXML = htmlUtils.getRequestXML(html);
+//            //从返回页面中获取message和signature
+//            Map<String, String> messageSignature = htmlUtils.getMessageAndSignature(html);
+//            MultiValueMap<String,String> params2 = new LinkedMultiValueMap<>();
+//            params2.add("RequestPlainText", requestXML);
+//            params2.add("message", messageSignature.get("message"));
+//            params2.add("signature", messageSignature.get("signature"));
+//            params2.add("txCode", "2511");
+//            params2.add("txName", "快捷支付");
+//            params2.add("Flag", "");
+//            String url2 = "http://localhost:8080/zhongjin-demo-1.0-SNAPSHOT/SendMessage";
+//            String html2 = httpClient.client(url2, method, params2);
+//            String response = htmlUtils.getResponse(html2);
+            AcquirerUtil acquirerUtil = new AcquirerUtil();
+            String response = acquirerUtil.Tx2511(PaymentNo, cost, TxSNBinding, httpClient);
             System.out.println("response: "+response);
             if(response.equals("OK.")){
                 jsonObj3.put("result", "ok");

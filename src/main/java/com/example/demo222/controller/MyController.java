@@ -1,6 +1,8 @@
 package com.example.demo222.controller;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.example.demo222.Utils.AcquirerUtil;
 import com.example.demo222.Utils.GUIDGenerator;
 import com.example.demo222.Utils.GlobalResult;
 import com.example.demo222.Utils.htmlUtils;
@@ -34,6 +36,7 @@ public class MyController {
     private BindingInfo bindingInfo;
     @Autowired
     private BillMapper billMapper;
+    private AcquirerUtil acquirerUtil;
 
     /** 
     * @Description: 第一次绑定请求，提交银行卡绑定相关信息以获取短信验证码 
@@ -100,47 +103,8 @@ public class MyController {
 
         //生成绑定流水号
         String txSNBinding = GUIDGenerator.genGUID();
-
-        //绑卡（获取验证码）的URL，通过向该URL提交绑卡信息可以生成绑卡的xml、message和signature
-        String url="http://localhost:8080/zhongjin-demo-1.0-SNAPSHOT/Tx2531";
-        HttpMethod method=HttpMethod.POST;
-        String institutionID = "200027";//机构号
-
-        //封装绑卡（获取验证码）请求参数
-        MultiValueMap<String,String> params = new LinkedMultiValueMap<>();
-        params.add("InstitutionID",institutionID);
-        params.add("TxCode",txCode);
-        params.add("TxSNBinding",txSNBinding);
-        params.add("BankID",bankID);
-        params.add("AccountName",accountName);
-        params.add("AccountNumber",cardNumber);
-        params.add("IdentificationType",identificationType);
-        params.add("IdentificationNumber",identificationNumber);
-        params.add("PhoneNumber",phoneNumber);
-        params.add("CardType",cardType);
-        //ValidDate和CVN2为可选字段，如果不选，也应将其加入请求参数中，值为""
-        params.add("ValidDate", "");
-        params.add("CVN2", "");
-
-        //向http://localhost:8080/zhongjin-demo-1.0-SNAPSHOT/Tx2531提交表单，得到返回页面
-        String html = httpClient.client(url, method, params);
-        //获取返回页面中的xml
-        String requestXML = htmlUtils.getRequestXML(html);
-        //从返回页面中获取message和signature
-        Map<String, String> messageSignature = htmlUtils.getMessageAndSignature(html);
-
-        //封装参数，进行最终的表单提交
-        MultiValueMap<String,String> params2 = new LinkedMultiValueMap<>();
-        params2.add("RequestPlainText", requestXML);
-        params2.add("message", messageSignature.get("message"));
-        params2.add("signature", messageSignature.get("signature"));
-        params2.add("txCode", "2531");
-        params2.add("txName", "建立绑定关系（发送验证短信）");
-        params2.add("Flag", "");
-        String url2 = "http://localhost:8080/zhongjin-demo-1.0-SNAPSHOT/SendMessage";
-        String html2 = httpClient.client(url2, method, params2);
         //从返回的页面中解析绑卡（获取验证码）结果
-        String response = htmlUtils.getResponse(html2);
+        String response = acquirerUtil.Tx2531(txCode, txSNBinding, bankID, accountName, cardNumber, identificationType, identificationNumber, phoneNumber, cardType, httpClient);
 
         //如果获取验证码成功，则将本次绑卡信息写入表binding、card和user
         if (response.equals("OK")){
@@ -163,10 +127,6 @@ public class MyController {
             }
 
             //如果数据库中没有本次绑定的银行卡，则添加一条银行卡记录，并更新用户信息；如果已绑定过该卡，则不作操作
-//            Map<String,Object> cardMap = new HashMap<>();
-//            cardMap.put("cardNumber", cardNumber);
-//            cardMap.put("AccountId", accountId);
-//            List<Card> cards = this.cardMapper.selectByMap(cardMap);
             QueryWrapper<Card> wrapper1 = new QueryWrapper<Card>();
             wrapper1.eq("cardNumber", cardNumber);
             wrapper1.eq("AccountId", accountId);
@@ -228,33 +188,7 @@ public class MyController {
         //从数据库中得到绑定流水号
         String txSNBinding = bindingResult.getTxSnBinding();
 
-        String url="http://localhost:8080/zhongjin-demo-1.0-SNAPSHOT/Tx2532";
-        HttpMethod method=HttpMethod.POST;
-        String institutionID = "200027";
-
-        //封装绑定请求参数
-        MultiValueMap params = new LinkedMultiValueMap<>();
-        params.add("InstitutionID", institutionID);
-        params.add("TxCode", "2532");
-        params.add("TxSNBinding", txSNBinding);
-        params.add("SMSValidationCode", sms_validation_code);
-        params.add("ValidDate", "");
-        params.add("CVN2", "");
-
-        String html = httpClient.client(url, method, params);
-        String requestXML = htmlUtils.getRequestXML(html);
-        Map<String, String> messageSignature = htmlUtils.getMessageAndSignature(html);
-
-        MultiValueMap<String,String> params2 = new LinkedMultiValueMap<>();
-        params2.add("RequestPlainText", requestXML);
-        params2.add("message", messageSignature.get("message"));
-        params2.add("signature", messageSignature.get("signature"));
-        params2.add("txCode", "2532");
-        params2.add("txName", "建立绑定关系（验证和绑定）");
-        params2.add("Flag", "");
-        String url2 = "http://localhost:8080/zhongjin-demo-1.0-SNAPSHOT/SendMessage";
-        String html2 = httpClient.client(url2, method, params2);
-        String response = htmlUtils.getResponse(html2);
+        String response = acquirerUtil.Tx2532(txSNBinding, sms_validation_code, httpClient);
 
         //如果绑卡成功，则删除表binding中的绑卡记录
         if (response.equals("OK.")){
