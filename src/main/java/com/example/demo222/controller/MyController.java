@@ -36,6 +36,8 @@ public class MyController {
     private BindingInfo bindingInfo;
     @Autowired
     private BillMapper billMapper;
+    @Autowired
+    private ChargingPointMapper chargingPointMapper;
     private AcquirerUtil acquirerUtil;
 
     /** 
@@ -371,14 +373,21 @@ public class MyController {
         for (int i=0;i<bills.size();i++){
             Map<String, String> bill = new HashMap<String, String>();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
-            bill.put("billTime", sdf.format(bills.get(i).getTime()));
+            bill.put("billTime", sdf.format(bills.get(i).getEndTime()));
             bill.put("amount", bills.get(i).getAmount());
             bill.put("cardNumber", bills.get(i).getCardNumber().substring(bills.get(i).getCardNumber().length()-4, bills.get(i).getCardNumber().length()));
             bill.put("paymentNumber", bills.get(i).getPaymentNumber());
-            bill.put("startTime", "2019.8.13 12:00");
-            bill.put("endTime", "2019.8.13 14:00");
-            bill.put("duration", "2");
-            bill.put("location", "深圳市南山区南头街道关口二路15号场地");
+            bill.put("startTime", sdf.format(bills.get(i).getStartTime()));
+            bill.put("endTime", sdf.format(bills.get(i).getEndTime()));
+            bill.put("duration", String.valueOf(getDistanceTime(bills.get(i).getStartTime(), bills.get(i).getEndTime())));
+            String deviceNumber = bills.get(i).getDeviceNumber();
+
+            QueryWrapper<ChargingPoint> chargingPointQueryWrapper = new QueryWrapper<>();
+            chargingPointQueryWrapper.eq("id", deviceNumber);
+            ChargingPoint chargingPoint = this.chargingPointMapper.selectOne(chargingPointQueryWrapper);
+            String position = chargingPoint.getPosition();
+
+            bill.put("location", position);
             result.add(bill);
         }
         return GlobalResult.build(200, null, result);
@@ -421,6 +430,21 @@ public class MyController {
             return 0;
         }
         return cards.get(cards.size()-1).getPriority();
+    }
+
+    public double getDistanceTime(Date startTime, Date endTime) {
+        double hour = 0;
+        long time1 = startTime.getTime();
+        long time2 = endTime.getTime();
+
+        long diff;
+        if (time1 < time2) {
+            diff = time2 - time1;
+        } else {
+            diff = time1 - time2;
+        }
+        hour = (diff / (60 * 60 * 1000));
+        return hour;
     }
 
 }

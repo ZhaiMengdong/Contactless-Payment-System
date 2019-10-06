@@ -83,19 +83,33 @@ public class CallBack implements MqttCallback {
         jsonObj3.put("client_addr", clientAddr);
 
         if(topic.equals("authentication")){
-            String vin = OCPP.parseOCPPVin(ocppPacket);
+//            String vin = OCPP.parseOCPPVin(ocppPacket);
+            Map<String, String> ocppInfo = OCPP.ocppAuthentication(ocppPacket);
+            String vin = ocppInfo.get("vin");
+            String vendorId = ocppInfo.get("vendorId");
             QueryWrapper<Car> wrapper = new QueryWrapper<>();
             wrapper.eq("Vin", vin);
             List<Car> cars = new ArrayList<Car>();
             cars = this.carMapper.selectList(wrapper);
             if(cars.size() == 0){
-                jsonObj3.put("result", "error");
+                jsonObj3.put("result", OCPP.ocppAuthenticationReturn("0").toString());
             }else {
-                jsonObj3.put("result", "ok");
+                jsonObj3.put("result", OCPP.ocppAuthenticationReturn("1").toString());
+                Bill bill = new Bill();
+                bill.setDeviceNumber(vendorId);
+                bill.setVin(vin);
+                bill.setStatus("0");
+                bill.setStartTime(new Date());
+                billMapper.insert(bill);
             }
         }else if (topic.equals("payment")){
-            String cost = OCPP.parseOCPPCost(ocppPacket);
-            String vin = OCPP.parseOCPPVin(ocppPacket);
+            Map<String, String> ocppInfo = OCPP.ocppPay(ocppPacket);
+            String cost = ocppInfo.get("cost");
+            String vendorId = ocppInfo.get("vendorId");
+            QueryWrapper<Bill> wrapper0 = new QueryWrapper<>();
+            wrapper0.eq("deviceNumber", vendorId);
+            Bill billResult = billMapper.selectOne(wrapper0);
+            String vin = billResult.getVin();
 
             QueryWrapper<Car> wrapper1 = new QueryWrapper<>();
             wrapper1.eq("Vin", vin);
@@ -109,45 +123,15 @@ public class CallBack implements MqttCallback {
             String TxSNBinding = cards.get(0).getTxSnBinding();
             String PaymentNo = GUIDGenerator.genGUID();
 
-//            String url="http://localhost:8080/zhongjin-demo-1.0-SNAPSHOT/Tx2511";
-//            HttpMethod method = HttpMethod.POST;
-//            String institutionID = "200027";//机构号
-//            MultiValueMap<String,String> params = new LinkedMultiValueMap<>();
-//            params.add("InstitutionID",institutionID);
-//            params.add("PaymentNo", PaymentNo);
-//            params.add("TxCode","2511");
-//            params.add("Amount", cost);
-//            params.add("TxSNBinding", TxSNBinding);
-//            params.add("SplitType", "10");
-//            params.add("SettlementFlag","0001");
-//            //ValidDate和CVN2为可选字段，如果不选，也应将其加入请求参数中，值为""
-//            params.add("ValidDate", "");
-//            params.add("CVN2", "");
-//            params.add("SharedInstitutionID", "");
-//            params.add("Remark","");
-//
-//            //向http://localhost:8080/zhongjin-demo-1.0-SNAPSHOT/Tx2511提交表单，得到返回页面
-//            String html = httpClient.client(url, method, params);
-//            //获取返回页面中的xml
-//            String requestXML = htmlUtils.getRequestXML(html);
-//            //从返回页面中获取message和signature
-//            Map<String, String> messageSignature = htmlUtils.getMessageAndSignature(html);
-//            MultiValueMap<String,String> params2 = new LinkedMultiValueMap<>();
-//            params2.add("RequestPlainText", requestXML);
-//            params2.add("message", messageSignature.get("message"));
-//            params2.add("signature", messageSignature.get("signature"));
-//            params2.add("txCode", "2511");
-//            params2.add("txName", "快捷支付");
-//            params2.add("Flag", "");
-//            String url2 = "http://localhost:8080/zhongjin-demo-1.0-SNAPSHOT/SendMessage";
-//            String html2 = httpClient.client(url2, method, params2);
-//            String response = htmlUtils.getResponse(html2);
             AcquirerUtil acquirerUtil = new AcquirerUtil();
             String response = acquirerUtil.Tx2511(PaymentNo, cost, TxSNBinding, httpClient);
             System.out.println("response: "+response);
             if(response.equals("OK.")){
-                jsonObj3.put("result", "ok");
+                jsonObj3.put("result", OCPP.ocppPayReturn("1").toString());
                 String cardNumber = cards.get(0).getCardNumber();
+                QueryWrapper<Bill> queryWrapper = new QueryWrapper();
+                queryWrapper.eq("status", "0");
+                queryWrapper.eq("deviceNumber", vendorId);
                 Bill bill = new Bill();
                 bill.setAccountId(accountId);
                 bill.setAmount(cost);
@@ -155,13 +139,11 @@ public class CallBack implements MqttCallback {
                 bill.setInstitutionId("200027");
                 bill.setPaymentNumber(PaymentNo);
                 bill.setStatus("1");
-                bill.setTime(new Date());
-                bill.setDeviceNumber(gatewayId+'-'+clientAddr);
-                this.billMapper.insert(bill);
+                bill.setEndTime(new Date());
+                billMapper.update(bill, queryWrapper);
             }else {
-                jsonObj3.put("result", "failed");
+                jsonObj3.put("result", OCPP.ocppPayReturn("0").toString());
             }
-
         }
 
         System.out.println(jsonObj3.toString());

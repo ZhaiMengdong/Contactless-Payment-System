@@ -102,7 +102,7 @@ public class AcquirerUtil {
             params.add("InstitutionID",institutionID);
             params.add("PaymentNo", PaymentNo);
             params.add("TxCode","2511");
-            params.add("Amount", cost);
+            params.add("Amount", "1");
             params.add("TxSNBinding", TxSNBinding);
             params.add("SplitType", "10");
             params.add("SettlementFlag","0001");

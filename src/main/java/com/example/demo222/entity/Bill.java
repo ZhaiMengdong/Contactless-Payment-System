@@ -20,9 +20,13 @@ public class Bill {
     private String accountId;
 
     //订单生成的时间
-    @TableField("time")
+    @TableField("startTime")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private Date time;
+    private Date startTime;
+
+    @TableField("endTime")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private Date endTime;
 
     //交易金额
     @TableField("amount")
@@ -48,7 +52,16 @@ public class Bill {
     @TableField("deviceNumber")
     private String deviceNumber;
 
-    private String carNumber;
+    @TableField("vin")
+    private String vin;
+
+    public String getVin() {
+        return vin;
+    }
+
+    public Date getEndTime() {
+        return endTime;
+    }
 
     public String getDeviceNumber() {
         return deviceNumber;
@@ -58,8 +71,8 @@ public class Bill {
         return accountId;
     }
 
-    public Date getTime() {
-        return time;
+    public Date getStartTime() {
+        return startTime;
     }
 
     public String getAmount() {
@@ -86,8 +99,8 @@ public class Bill {
         this.accountId = accountId;
     }
 
-    public void setTime(Date time) {
-        this.time = time;
+    public void setStartTime(Date time) {
+        this.startTime = time;
     }
 
     public void setAmount(String amount) {
@@ -112,5 +125,13 @@ public class Bill {
 
     public void setDeviceNumber(String deviceNumber) {
         this.deviceNumber = deviceNumber;
+    }
+
+    public void setVin(String vin) {
+        this.vin = vin;
+    }
+
+    public void setEndTime(Date endTime) {
+        this.endTime = endTime;
     }
 }
