@@ -108,6 +108,7 @@ public class CallBack implements MqttCallback {
             String vendorId = ocppInfo.get("vendorId");
             QueryWrapper<Bill> wrapper0 = new QueryWrapper<>();
             wrapper0.eq("deviceNumber", vendorId);
+            wrapper0.eq("status", "0");
             Bill billResult = billMapper.selectOne(wrapper0);
             String vin = billResult.getVin();
 
@@ -142,6 +143,12 @@ public class CallBack implements MqttCallback {
                 bill.setEndTime(new Date());
                 billMapper.update(bill, queryWrapper);
             }else {
+                QueryWrapper<Bill> queryWrapper = new QueryWrapper();
+                queryWrapper.eq("status", "0");
+                queryWrapper.eq("deviceNumber", vendorId);
+                Bill bill = new Bill();
+                bill.setStatus("-1");
+                billMapper.update(bill, queryWrapper);
                 jsonObj3.put("result", OCPP.ocppPayReturn("0").toString());
             }
         }
