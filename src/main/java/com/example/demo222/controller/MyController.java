@@ -110,7 +110,7 @@ public class MyController {
         String response = acquirerUtil.Tx2531(txCode, txSNBinding, bankID, accountName, cardNumber, identificationType, identificationNumber, phoneNumber, cardType, httpClient);
 
         //如果获取验证码成功，则将本次绑卡信息写入表binding、card和user
-        if (response.equals("OK")){
+        if (response.equals("OK") || response.equals("交易成功")){
 
             QueryWrapper<Binding> wrapper = new QueryWrapper<Binding>();
             wrapper.eq("AccountId", accountId);
