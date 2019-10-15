@@ -33,7 +33,7 @@ public class OCPP {
         Map<String, String> parseResult = new HashMap<String, String>();
         parseResult.put("vendorId", properties.getString("vendorId"));
         String meterStop = properties.getString("meterStop");
-        String cost = String.valueOf(Float.parseFloat(meterStop) * 120);
+        String cost = String.valueOf(Integer.parseInt(meterStop)/5 + 4);
         parseResult.put("cost", cost);
         return parseResult;
     }
