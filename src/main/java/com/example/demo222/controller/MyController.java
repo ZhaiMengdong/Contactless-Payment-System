@@ -38,7 +38,7 @@ public class MyController {
     private BillMapper billMapper;
     @Autowired
     private ChargingPointMapper chargingPointMapper;
-    private AcquirerUtil acquirerUtil;
+
 
     /** 
     * @Description: 第一次绑定请求，提交银行卡绑定相关信息以获取短信验证码 
@@ -106,6 +106,7 @@ public class MyController {
         //生成绑定流水号
         String txSNBinding = GUIDGenerator.genGUID();
         //从返回的页面中解析绑卡（获取验证码）结果
+        AcquirerUtil acquirerUtil = new AcquirerUtil();
         String response = acquirerUtil.Tx2531(txCode, txSNBinding, bankID, accountName, cardNumber, identificationType, identificationNumber, phoneNumber, cardType, httpClient);
 
         //如果获取验证码成功，则将本次绑卡信息写入表binding、card和user
@@ -190,6 +191,7 @@ public class MyController {
         //从数据库中得到绑定流水号
         String txSNBinding = bindingResult.getTxSnBinding();
 
+        AcquirerUtil acquirerUtil = new AcquirerUtil();
         String response = acquirerUtil.Tx2532(txSNBinding, sms_validation_code, httpClient);
 
         //如果绑卡成功，则删除表binding中的绑卡记录
