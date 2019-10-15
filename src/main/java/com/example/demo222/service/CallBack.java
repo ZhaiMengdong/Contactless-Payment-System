@@ -95,6 +95,10 @@ public class CallBack implements MqttCallback {
                 jsonObj3.put("result", OCPP.ocppAuthenticationReturn("0").toString());
             }else {
                 jsonObj3.put("result", OCPP.ocppAuthenticationReturn("1").toString());
+                QueryWrapper queryWrapper = new QueryWrapper();
+                queryWrapper.eq("vin", vin);
+                queryWrapper.eq("status", "0");
+                billMapper.delete(queryWrapper);
                 Bill bill = new Bill();
                 bill.setDeviceNumber(vendorId);
                 bill.setVin(vin);
