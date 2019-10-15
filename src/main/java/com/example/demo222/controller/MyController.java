@@ -228,14 +228,21 @@ public class MyController {
             @RequestParam("Vin") String vin,//车架号
             @RequestParam("License_plate") String licensePlate//车牌号
     ) throws Exception {
-        Car new_car = new Car();
-        new_car.setAccountId(accountId);
-        new_car.setVin(vin);
-        new_car.setLicensePlate(licensePlate);
-        this.carMapper.insert(new_car);
-
         Map<String, String> result = new HashMap<String, String>();
-        result.put("Confirm", "OK");
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.eq("vin", vin);
+        List<Car> cars = this.carMapper.selectList(queryWrapper);
+        if(cars.size() == 0){
+            Car new_car = new Car();
+            new_car.setAccountId(accountId);
+            new_car.setVin(vin);
+            new_car.setLicensePlate(licensePlate);
+            this.carMapper.insert(new_car);
+            result.put("Confirm", "OK");
+        }else {
+            result.put("Confirm", "The car has been put into service");
+        }
+
         return GlobalResult.build(200, null, result);
     }
 
