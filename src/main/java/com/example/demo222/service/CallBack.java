@@ -73,89 +73,95 @@ public class CallBack implements MqttCallback {
         System.out.println("解密后字符串："+ payload);
 
         int endFlagIndex = payload.indexOf("E_N_D");
-        JSONObject jsonObj2 = JSON.parseObject(payload.substring(0,endFlagIndex));
-        String ocppPacket = jsonObj2.get("data_recv").toString();
-        String clientAddr = jsonObj2.get("client_addr").toString();
-        String gatewayId = jsonObj2.getString("gateway_id");
-        System.out.println("ocppPacket: "+ocppPacket);
-
         JSONObject jsonObj3 = new JSONObject();
-        jsonObj3.put("client_addr", clientAddr);
+        String gatewayId = "0000000";
+        if(endFlagIndex == -1){
+            JSONObject jsonObj2 = JSON.parseObject(payload.substring(0,endFlagIndex));
+            String ocppPacket = jsonObj2.get("data_recv").toString();
+            String clientAddr = jsonObj2.get("client_addr").toString();
+            gatewayId = jsonObj2.getString("gateway_id");
+            System.out.println("ocppPacket: "+ocppPacket);
 
-        if(topic.equals("authentication")){
+            jsonObj3.put("client_addr", clientAddr);
+
+            if(topic.equals("authentication")){
 //            String vin = OCPP.parseOCPPVin(ocppPacket);
-            Map<String, String> ocppInfo = OCPP.ocppAuthentication(ocppPacket);
-            String vin = ocppInfo.get("vin");
-            String vendorId = ocppInfo.get("vendorId");
-            QueryWrapper<Car> wrapper = new QueryWrapper<>();
-            wrapper.eq("Vin", vin);
-            List<Car> cars = new ArrayList<Car>();
-            cars = this.carMapper.selectList(wrapper);
-            if(cars.size() == 0){
-                jsonObj3.put("result", OCPP.ocppAuthenticationReturn("0").toString());
-            }else {
-                jsonObj3.put("result", OCPP.ocppAuthenticationReturn("1").toString());
-                QueryWrapper queryWrapper = new QueryWrapper();
-                queryWrapper.eq("vin", vin);
-                queryWrapper.eq("status", "0");
-                billMapper.delete(queryWrapper);
-                Bill bill = new Bill();
-                bill.setDeviceNumber(vendorId);
-                bill.setVin(vin);
-                bill.setStatus("0");
-                bill.setStartTime(new Date());
-                billMapper.insert(bill);
-            }
-        }else if (topic.equals("payment")){
-            Map<String, String> ocppInfo = OCPP.ocppPay(ocppPacket);
-            String cost = ocppInfo.get("cost");
-            String vendorId = ocppInfo.get("vendorId");
-            QueryWrapper<Bill> wrapper0 = new QueryWrapper<>();
-            wrapper0.eq("deviceNumber", vendorId);
-            wrapper0.eq("status", "0");
-            Bill billResult = billMapper.selectOne(wrapper0);
-            String vin = billResult.getVin();
+                Map<String, String> ocppInfo = OCPP.ocppAuthentication(ocppPacket);
+                String vin = ocppInfo.get("vin");
+                String vendorId = ocppInfo.get("vendorId");
+                QueryWrapper<Car> wrapper = new QueryWrapper<>();
+                wrapper.eq("Vin", vin);
+                List<Car> cars = new ArrayList<Car>();
+                cars = this.carMapper.selectList(wrapper);
+                if(cars.size() == 0){
+                    jsonObj3.put("result", OCPP.ocppAuthenticationReturn("0").toString());
+                }else {
+                    jsonObj3.put("result", OCPP.ocppAuthenticationReturn("1").toString());
+                    QueryWrapper queryWrapper = new QueryWrapper();
+                    queryWrapper.eq("vin", vin);
+                    queryWrapper.eq("status", "0");
+                    billMapper.delete(queryWrapper);
+                    Bill bill = new Bill();
+                    bill.setDeviceNumber(vendorId);
+                    bill.setVin(vin);
+                    bill.setStatus("0");
+                    bill.setStartTime(new Date());
+                    billMapper.insert(bill);
+                }
+            }else if (topic.equals("payment")){
+                Map<String, String> ocppInfo = OCPP.ocppPay(ocppPacket);
+                String cost = ocppInfo.get("cost");
+                String vendorId = ocppInfo.get("vendorId");
+                QueryWrapper<Bill> wrapper0 = new QueryWrapper<>();
+                wrapper0.eq("deviceNumber", vendorId);
+                wrapper0.eq("status", "0");
+                Bill billResult = billMapper.selectOne(wrapper0);
+                String vin = billResult.getVin();
 
-            QueryWrapper<Car> wrapper1 = new QueryWrapper<>();
-            wrapper1.eq("Vin", vin);
-            Car carResult = this.carMapper.selectOne(wrapper1);
-            String accountId = carResult.getAccountId();
-            QueryWrapper<Card> wrapper2 = new QueryWrapper<>();
-            wrapper2.eq("accountId", accountId);
-            wrapper2.orderByAsc("priority");
-            List<Card> cards = new ArrayList<>();
-            cards = cardMapper.selectList(wrapper2);
-            String TxSNBinding = cards.get(0).getTxSnBinding();
-            String PaymentNo = GUIDGenerator.genGUID();
+                QueryWrapper<Car> wrapper1 = new QueryWrapper<>();
+                wrapper1.eq("Vin", vin);
+                Car carResult = this.carMapper.selectOne(wrapper1);
+                String accountId = carResult.getAccountId();
+                QueryWrapper<Card> wrapper2 = new QueryWrapper<>();
+                wrapper2.eq("accountId", accountId);
+                wrapper2.orderByAsc("priority");
+                List<Card> cards = new ArrayList<>();
+                cards = cardMapper.selectList(wrapper2);
+                String TxSNBinding = cards.get(0).getTxSnBinding();
+                String PaymentNo = GUIDGenerator.genGUID();
 
-            AcquirerUtil acquirerUtil = new AcquirerUtil();
-            String response = acquirerUtil.Tx2511(PaymentNo, cost, TxSNBinding, httpClient);
-            System.out.println("response: "+response);
-            if(response.equals("OK.")){
-                jsonObj3.put("result", OCPP.ocppPayReturn("1").toString());
-                String cardNumber = cards.get(0).getCardNumber();
-                QueryWrapper<Bill> queryWrapper = new QueryWrapper();
-                queryWrapper.eq("status", "0");
-                queryWrapper.eq("deviceNumber", vendorId);
-                Bill bill = new Bill();
-                bill.setAccountId(accountId);
-                bill.setAmount(cost);
-                bill.setCardNumber(cardNumber);
-                bill.setInstitutionId("200027");
-                bill.setPaymentNumber(PaymentNo);
-                bill.setStatus("1");
-                bill.setEndTime(new Date());
-                billMapper.update(bill, queryWrapper);
-            }else {
-                QueryWrapper<Bill> queryWrapper = new QueryWrapper();
-                queryWrapper.eq("status", "0");
-                queryWrapper.eq("deviceNumber", vendorId);
-                Bill bill = new Bill();
-                bill.setStatus("-1");
-                billMapper.update(bill, queryWrapper);
-                jsonObj3.put("result", OCPP.ocppPayReturn("0").toString());
+                AcquirerUtil acquirerUtil = new AcquirerUtil();
+                String response = acquirerUtil.Tx2511(PaymentNo, cost, TxSNBinding, httpClient);
+                System.out.println("response: "+response);
+                if(response.equals("OK.")){
+                    jsonObj3.put("result", OCPP.ocppPayReturn("1").toString());
+                    String cardNumber = cards.get(0).getCardNumber();
+                    QueryWrapper<Bill> queryWrapper = new QueryWrapper();
+                    queryWrapper.eq("status", "0");
+                    queryWrapper.eq("deviceNumber", vendorId);
+                    Bill bill = new Bill();
+                    bill.setAccountId(accountId);
+                    bill.setAmount(cost);
+                    bill.setCardNumber(cardNumber);
+                    bill.setInstitutionId("200027");
+                    bill.setPaymentNumber(PaymentNo);
+                    bill.setStatus("1");
+                    bill.setEndTime(new Date());
+                    billMapper.update(bill, queryWrapper);
+                }else {
+                    QueryWrapper<Bill> queryWrapper = new QueryWrapper();
+                    queryWrapper.eq("status", "0");
+                    queryWrapper.eq("deviceNumber", vendorId);
+                    Bill bill = new Bill();
+                    bill.setStatus("-1");
+                    billMapper.update(bill, queryWrapper);
+                    jsonObj3.put("result", OCPP.ocppPayReturn("0").toString());
+                }
             }
+        }else {
+            jsonObj3.put("result", "Gateway encryption error");
         }
+
 
         System.out.println(jsonObj3.toString());
         System.arraycopy(jsonObj3.toString().getBytes(),0,data,0,jsonObj3.toString().length());
