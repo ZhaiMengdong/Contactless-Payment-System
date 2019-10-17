@@ -75,7 +75,7 @@ public class CallBack implements MqttCallback {
         int endFlagIndex = payload.indexOf("E_N_D");
         JSONObject jsonObj3 = new JSONObject();
         String gatewayId = "0000000";
-        if(endFlagIndex == -1){
+        if(endFlagIndex != -1){
             JSONObject jsonObj2 = JSON.parseObject(payload.substring(0,endFlagIndex));
             String ocppPacket = jsonObj2.get("data_recv").toString();
             String clientAddr = jsonObj2.get("client_addr").toString();
